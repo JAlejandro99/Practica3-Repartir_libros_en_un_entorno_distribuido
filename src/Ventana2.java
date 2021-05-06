@@ -1,14 +1,24 @@
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.border.EmptyBorder;
 
 public class Ventana2 extends javax.swing.JFrame {
     int PUERTO = 5000;
     String servidor="localhost";
     RelojGrafico r1;
+    InetAddress direccionServidor;
+    DatagramSocket socketUDP;
+    JTextArea infoLibros;
+    JScrollPane sp;
+    byte[] buffer;
+    int numReloj;
     public Ventana2() {
         initComponents();
     }
@@ -23,15 +33,22 @@ public class Ventana2 extends javax.swing.JFrame {
         r1.run();
         this.jPanel1.add(r1);
         iniciarCliente();
+        contentPane.setBorder(new EmptyBorder(5,5,5,5));
+        contentPane.setLayout(new BorderLayout(0,0));
+        infoLibros = new JTextArea(10,0);
+        contentPane.add(infoLibros);
+        contentPane.add(infoLibros, BorderLayout.CENTER);
+        sp = new JScrollPane(infoLibros,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        contentPane.add(sp);
     }
     public void iniciarCliente(){
         Thread cl = new Thread(){
             public void run(){
-		byte[] buffer = new byte[1024];
+		buffer = new byte[1024];
                 //
 		try{
-                    InetAddress direccionServidor = InetAddress.getByName(servidor);
-                    DatagramSocket socketUDP = new DatagramSocket();
+                    direccionServidor = InetAddress.getByName(servidor);
+                    socketUDP = new DatagramSocket();
                     String mensaje = "Iniciar";
                     buffer = mensaje.getBytes();
                     DatagramPacket pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor,PUERTO);
@@ -54,7 +71,8 @@ public class Ventana2 extends javax.swing.JFrame {
                             k+=1;
                         }
                     }
-                    r1.reasignarHora(respuesta[0], respuesta[1], respuesta[2]);
+                    r1.reasignarHora(respuesta[1], respuesta[2], respuesta[3]);
+                    numReloj = respuesta[0];
                     //System.out.println(respuesta[3]);
                     while(true){
                         buffer = new byte[1024];
@@ -63,55 +81,75 @@ public class Ventana2 extends javax.swing.JFrame {
                         System.out.println("Recibo la peticion");
                         mensaje = new String(peticion.getData());
                         System.out.println(mensaje);
-                        respuesta = new Integer[4];
-                        aux=0;
-                        k=0;
-                        for(i=0;i<mensaje.length();i++){
-                            if(mensaje.charAt(i)==','){
-                                respuesta[k] = Integer.valueOf(mensaje.substring(aux,i));
-                                aux=i+1;
-                                //System.out.println(respuesta[k]);
-                                k+=1;
+                        if(mensaje.startsWith("libro:")){
+                            String[] respuesta2 = new String[5];
+                            i=0;
+                            aux=0;
+                            k=0;
+                            for(i=0;i<mensaje.length();i++){
+                                if(mensaje.charAt(i)==','){
+                                    //System.out.println(mensaje.substring(aux,i));
+                                    respuesta2[k] = mensaje.substring(aux,i);
+                                    aux=i+1;
+                                    k+=1;
+                                }
                             }
-                        }
-                        r1.reasignarHora(respuesta[0], respuesta[1], respuesta[2]);
-                        //
-                        /*long TInicio, TFin, tiempo; //Variables para determinar el tiempo de ejecución
-                        TInicio = System.currentTimeMillis();*/
-                        //Iniciamos a contar, esto es T0
-                        /*mensaje = String.valueOf(respuesta[3]);
-                        System.out.println(mensaje);
-                        buffer = new byte[1024];
-                        buffer = mensaje.getBytes();
-                        pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor,PUERTO);
-                        System.out.println("Envio el datagrama");
-                        //Inicia el proceso de sincronización
-                        socketUDP.send(pregunta);
-                        buffer = new byte[1024];
-                        peticion = new DatagramPacket(buffer,buffer.length);
-                        socketUDP.receive(peticion);
-                        System.out.println("Recibo la peticion");
-                        mensaje = new String(peticion.getData());
-                        System.out.println(mensaje);
-                        respuesta = new Integer[4];
-                        aux=0;
-                        k=0;
-                        for(i=0;i<mensaje.length();i++){
-                            if(mensaje.charAt(i)==','){
-                                respuesta[k] = Integer.valueOf(mensaje.substring(aux,i));
-                                aux=i+1;
-                                System.out.println(respuesta[k]);
-                                k+=1;
+                            infoLibros.append(respuesta2[0].substring(6)+"\n");
+                            infoLibros.append(respuesta2[1]+"\n");
+                            infoLibros.append(respuesta2[2]+"\n");
+                            infoLibros.append(respuesta2[3]+"\n");
+                            infoLibros.append(respuesta2[4]+"\n\n");
+                        }else{
+                            respuesta = new Integer[4];
+                            aux=0;
+                            k=0;
+                            for(i=0;i<mensaje.length();i++){
+                                if(mensaje.charAt(i)==','){
+                                    respuesta[k] = Integer.valueOf(mensaje.substring(aux,i));
+                                    aux=i+1;
+                                    //System.out.println(respuesta[k]);
+                                    k+=1;
+                                }
                             }
+                            r1.reasignarHora(respuesta[1], respuesta[2], respuesta[3]);
+                            //
+                            /*long TInicio, TFin, tiempo; //Variables para determinar el tiempo de ejecución
+                            TInicio = System.currentTimeMillis();*/
+                            //Iniciamos a contar, esto es T0
+                            /*mensaje = String.valueOf(respuesta[3]);
+                            System.out.println(mensaje);
+                            buffer = new byte[1024];
+                            buffer = mensaje.getBytes();
+                            pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor,PUERTO);
+                            System.out.println("Envio el datagrama");
+                            //Inicia el proceso de sincronización
+                            socketUDP.send(pregunta);
+                            buffer = new byte[1024];
+                            peticion = new DatagramPacket(buffer,buffer.length);
+                            socketUDP.receive(peticion);
+                            System.out.println("Recibo la peticion");
+                            mensaje = new String(peticion.getData());
+                            System.out.println(mensaje);
+                            respuesta = new Integer[4];
+                            aux=0;
+                            k=0;
+                            for(i=0;i<mensaje.length();i++){
+                                if(mensaje.charAt(i)==','){
+                                    respuesta[k] = Integer.valueOf(mensaje.substring(aux,i));
+                                    aux=i+1;
+                                    System.out.println(respuesta[k]);
+                                    k+=1;
+                                }
+                            }
+                            /*TFin = System.currentTimeMillis(); //Tomamos la hora en que finalizó el algoritmo y la almacenamos en la variable T
+                            tiempo = TFin - TInicio; //Calculamos los milisegundos de diferencia
+                            System.out.println("Tiempo de ejecución en milisegundos: " + tiempo);
+                            int C=0;
+                            if(tiempo){
+
+                            }*/
+                            //r1.reasignarHora(respuesta[0], respuesta[1], respuesta[2]);
                         }
-                        /*TFin = System.currentTimeMillis(); //Tomamos la hora en que finalizó el algoritmo y la almacenamos en la variable T
-                        tiempo = TFin - TInicio; //Calculamos los milisegundos de diferencia
-                        System.out.println("Tiempo de ejecución en milisegundos: " + tiempo);
-                        int C=0;
-                        if(tiempo){
-                            
-                        }*/
-                        //r1.reasignarHora(respuesta[0], respuesta[1], respuesta[2]);
                     }
                     //socketUDP.close();
 		}catch(IOException e){}
@@ -125,7 +163,9 @@ public class Ventana2 extends javax.swing.JFrame {
 
         jMenu1 = new javax.swing.JMenu();
         jPanel1 = new javax.swing.JPanel();
+        contentPane = new javax.swing.JPanel();
         salir = new javax.swing.JButton();
+        pedirLibro = new javax.swing.JButton();
 
         jMenu1.setText("jMenu1");
 
@@ -133,21 +173,45 @@ public class Ventana2 extends javax.swing.JFrame {
 
         jPanel1.setBackground(new java.awt.Color(38, 70, 95));
 
+        javax.swing.GroupLayout contentPaneLayout = new javax.swing.GroupLayout(contentPane);
+        contentPane.setLayout(contentPaneLayout);
+        contentPaneLayout.setHorizontalGroup(
+            contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+        contentPaneLayout.setVerticalGroup(
+            contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 153, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(contentPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 130, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(147, Short.MAX_VALUE)
+                .addComponent(contentPane, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         salir.setText("Salir");
         salir.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 salirActionPerformed(evt);
+            }
+        });
+
+        pedirLibro.setText("Pedir libro");
+        pedirLibro.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pedirLibroActionPerformed(evt);
             }
         });
 
@@ -160,17 +224,21 @@ public class Ventana2 extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 221, Short.MAX_VALUE)
+                        .addGap(0, 290, Short.MAX_VALUE)
+                        .addComponent(pedirLibro)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(salir)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap()
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(salir)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(salir)
+                    .addComponent(pedirLibro))
                 .addContainerGap())
         );
 
@@ -180,6 +248,17 @@ public class Ventana2 extends javax.swing.JFrame {
     private void salirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_salirActionPerformed
         System.exit(0);
     }//GEN-LAST:event_salirActionPerformed
+
+    private void pedirLibroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pedirLibroActionPerformed
+        try{
+            String mensaje = "libro"+String.valueOf(numReloj);
+            buffer = new byte[1024];
+            buffer = mensaje.getBytes();
+            DatagramPacket pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor,PUERTO);
+            System.out.println("Pidiendo libro");
+            socketUDP.send(pregunta);
+        }catch(IOException e){}
+    }//GEN-LAST:event_pedirLibroActionPerformed
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -213,8 +292,10 @@ public class Ventana2 extends javax.swing.JFrame {
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel contentPane;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JButton pedirLibro;
     private javax.swing.JButton salir;
     // End of variables declaration//GEN-END:variables
 }

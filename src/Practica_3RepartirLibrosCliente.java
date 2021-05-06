@@ -1,7 +1,7 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class Practica_2RelojesConMaestroCliente {
+public class Practica_3RepartirLibrosCliente {
     static int PUERTO;
     static String servidor;
     public static void main(String[] args) {
