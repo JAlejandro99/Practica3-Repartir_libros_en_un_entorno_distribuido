@@ -15,7 +15,6 @@ public class Ventana1 extends javax.swing.JFrame {
     public Ventana1() {
         initComponents();
         panel = new Ilustrador(850,700,"");
-        panel.dibujar("huskies.jpg");
         this.setLocationRelativeTo(null);
         r1 = new RelojGrafico(false,328,50);
         r2 = new RelojGrafico(false,38,205);
@@ -82,6 +81,7 @@ public class Ventana1 extends javax.swing.JFrame {
 		try{
                     System.out.println("Iniciando el servidor UDP");
                     socketUDP = new DatagramSocket(PUERTO);
+                    ConectorBaseDatos cbd = new ConectorBaseDatos();
                     while(true){
                         buffer = new byte[1024];
 			DatagramPacket peticion = new DatagramPacket(buffer,buffer.length);
@@ -92,6 +92,7 @@ public class Ventana1 extends javax.swing.JFrame {
                         System.out.println("Recibido: "+mensaje);
                         if(mensaje.startsWith("libro")){
                             numeroReloj = Integer.valueOf(mensaje.substring(5,6));
+                            String hora = mensaje.substring(6);
                             if(numeroReloj>2){
                                 puertoCliente[3] = peticion.getPort();
                                 direccion[3] = peticion.getAddress();
@@ -99,15 +100,13 @@ public class Ventana1 extends javax.swing.JFrame {
                                 puertoCliente[numeroReloj] = peticion.getPort();
                                 direccion[numeroReloj] = peticion.getAddress();
                             }
-                            System.out.println(numeroReloj);
-                            String resp = "libro:1,";
-                            resp += "dato1,";
-                            resp += "dato2,";
-                            resp += "dato3,";
-                            resp += "dato4,";
-                            System.out.println(resp);
+                            //System.out.println(numeroReloj); //Prestando el libro al cliente ...
+                            String[] resp = cbd.pedirLibro(direccion,puertoCliente,hora);
+                            System.out.println(resp[0]);
+                            System.out.println(resp[1]);
+                            panel.dibujar(resp[1]);
                             buffer = new byte[1024];
-                            buffer = resp.getBytes();
+                            buffer = resp[0].getBytes();
                             DatagramPacket respuesta = new DatagramPacket(buffer,buffer.length,direccion[numeroReloj],puertoCliente[numeroReloj]);
                             System.out.println("Envio la informacion del cliente");
                             socketUDP.send(respuesta);

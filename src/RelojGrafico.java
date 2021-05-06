@@ -42,6 +42,22 @@ public class RelojGrafico extends JPanel implements Runnable {
         ret[2] = segundos;
         return ret;
     }
+    public String getHora2(){
+        String hora;
+        if(horas<10)
+            hora = "0"+horas+":";
+        else
+            hora = horas+":";
+        if(minutos<10)
+            hora += "0"+minutos+":";
+        else
+            hora += minutos+":";
+        if(segundos<10)
+            hora += "0"+segundos;
+        else
+            hora += segundos;
+        return hora;
+    }
     public void iniciarReloj(){
         reloj = new Thread(){
             @Override
@@ -135,19 +151,7 @@ public class RelojGrafico extends JPanel implements Runnable {
         g.setColor(Color.white);
         g.fillRoundRect(0,0,this.getWidth()-27,this.getHeight()-2,15,15);
         g.setColor(Color.black);
-        String hora;
-        if(horas<10)
-            hora = "0"+horas+":";
-        else
-            hora = horas+":";
-        if(minutos<10)
-            hora += "0"+minutos+":";
-        else
-            hora += minutos+":";
-        if(segundos<10)
-            hora += "0"+segundos;
-        else
-            hora += segundos;
+        String hora = getHora2();
         g.setFont( new Font( "Tahoma", Font.BOLD, 45 ) );
         g.drawString(hora,9,70);
         if(velocidad!=1){

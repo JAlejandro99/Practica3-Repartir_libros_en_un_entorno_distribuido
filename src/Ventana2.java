@@ -82,7 +82,7 @@ public class Ventana2 extends javax.swing.JFrame {
                         mensaje = new String(peticion.getData());
                         System.out.println(mensaje);
                         if(mensaje.startsWith("libro:")){
-                            String[] respuesta2 = new String[5];
+                            String[] respuesta2 = new String[4];
                             i=0;
                             aux=0;
                             k=0;
@@ -97,8 +97,7 @@ public class Ventana2 extends javax.swing.JFrame {
                             infoLibros.append(respuesta2[0].substring(6)+"\n");
                             infoLibros.append(respuesta2[1]+"\n");
                             infoLibros.append(respuesta2[2]+"\n");
-                            infoLibros.append(respuesta2[3]+"\n");
-                            infoLibros.append(respuesta2[4]+"\n\n");
+                            infoLibros.append(respuesta2[3]+"\n\n");
                         }else{
                             respuesta = new Integer[4];
                             aux=0;
@@ -251,7 +250,7 @@ public class Ventana2 extends javax.swing.JFrame {
 
     private void pedirLibroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pedirLibroActionPerformed
         try{
-            String mensaje = "libro"+String.valueOf(numReloj);
+            String mensaje = "libro"+String.valueOf(numReloj)+r1.getHora2();
             buffer = new byte[1024];
             buffer = mensaje.getBytes();
             DatagramPacket pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor,PUERTO);
