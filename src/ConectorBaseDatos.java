@@ -53,7 +53,7 @@ public class ConectorBaseDatos {
             ps.setString(1,ar.get(i));
             ResultSet rs = ps.executeQuery();
             if(rs.next()){
-                ret[0] = "Libro:"+rs.getString("nombre")+","+rs.getString("autor")+","+rs.getString("editorial")+","+rs.getString("precio")+",";
+                ret[0] = "libro:"+rs.getString("nombre")+","+rs.getString("autor")+","+rs.getString("editorial")+","+rs.getString("precio")+",";
                 ret[1] = rs.getString("portada");        
                 i = Integer.parseInt(rs.getString("ISBN"));
             }

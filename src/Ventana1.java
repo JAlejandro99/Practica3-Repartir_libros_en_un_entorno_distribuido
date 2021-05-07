@@ -67,11 +67,12 @@ public class Ventana1 extends javax.swing.JFrame {
         contentPane.add(sp);
         //Escribir los libros de la bd en listaLibros
         cbd = new ConectorBaseDatos();
+        cbd.reiniciarBD();
         ArrayList<String> libros = cbd.getLibros();
         listaLibros.setText("");
         for(int i=0;i<libros.size();i++){
             listaLibros.append(libros.get(i)+"\n");
-            System.out.println(libros.get(i));
+            //System.out.println(libros.get(i));
         }
     }
     /*public void conectarServidor1(){
@@ -137,7 +138,6 @@ public class Ventana1 extends javax.swing.JFrame {
 		try{
                     System.out.println("Iniciando el servidor UDP");
                     socketUDP = new DatagramSocket(PUERTO);
-                    cbd.reiniciarBD();
                     while(true){
                         buffer = new byte[1024];
 			DatagramPacket peticion = new DatagramPacket(buffer,buffer.length);
@@ -148,7 +148,7 @@ public class Ventana1 extends javax.swing.JFrame {
                         System.out.println("Recibido: "+mensaje);
                         if(mensaje.startsWith("libro")){
                             numeroReloj = Integer.valueOf(mensaje.substring(5,6));
-                            String hora = mensaje.substring(6);
+                            String hora = mensaje.substring(6,14);
                             if(numeroReloj>2){
                                 puertoCliente[3] = peticion.getPort();
                                 direccion[3] = peticion.getAddress();
@@ -157,7 +157,11 @@ public class Ventana1 extends javax.swing.JFrame {
                                 direccion[numeroReloj] = peticion.getAddress();
                             }
                             //System.out.println(numeroReloj); //Prestando el libro al cliente ...
-                            String[] resp = cbd.pedirLibro(numeroReloj,direccion,hora);
+                            byte[] ip = new byte[4];
+                            ip = direccion[numeroReloj].getAddress();
+                            String IP = (0xff & (int)ip[0]) + "." +(0xff & (int)ip[1]) + "." +(0xff & (int)ip[2]) + "." +(0xff & (int)ip[3]);
+                            System.out.println("Dirección IP: " + IP);
+                            String[] resp = cbd.pedirLibro(IP,hora,"Cliente"+String.valueOf(numeroReloj));
                             System.out.println(resp[0]);
                             System.out.println(resp[1]);
                             panel.dibujar(resp[1]);
@@ -189,7 +193,11 @@ public class Ventana1 extends javax.swing.JFrame {
                                 direccion[numeroReloj] = peticion.getAddress();
                             }
                             //Regresar los datos de un usuario a la tabla de los libros a prestar
-                            cbd.reiniciarUsuario(direccion,puertoCliente,hora);
+                            /*byte[] ip = new byte[4];
+                            ip = direccion[numeroReloj].getAddress();
+                            String IP = (0xff & (int)ip[0]) + "." +(0xff & (int)ip[1]) + "." +(0xff & (int)ip[2]) + "." +(0xff & (int)ip[3]);
+                            System.out.println("Dirección IP: " + IP);*/
+                            //cbd.reiniciarUsuario(direccion,puertoCliente,hora);
                             System.out.println("Reiniciar de usuario "+String.valueOf(numeroReloj));
                             ////
                             //Escribir los libros de la bd en listaLibros
@@ -399,6 +407,8 @@ public class Ventana1 extends javax.swing.JFrame {
             socketUDP.send(respuesta);
             System.out.println("Envio el reinicio al cliente 3");
         }catch(IOException e){}
+        //Reiniciar BD
+        cbd.reiniciarBD();
         ////
         //Escribir los libros de la bd en listaLibros
         ////
@@ -407,7 +417,6 @@ public class Ventana1 extends javax.swing.JFrame {
         for(int i=0;i<libros.size();i++){
             listaLibros.append(libros.get(i)+"\n");
         }
-        //Reiniciar BD
     }//GEN-LAST:event_reiniciarActionPerformed
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
