@@ -1,20 +1,38 @@
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.border.EmptyBorder;
 
 public class Ventana1 extends javax.swing.JFrame {
     RelojGrafico r1,r2,r3,r4;
     Ilustrador panel;
+    int numServidor;
+    //numeroReloj = #Cliente
     int numeroReloj;
     DatagramSocket socketUDP;
+    DatagramSocket socketUDPServidor2;
     InetAddress[] direccion;
     int[] puertoCliente;
-    public Ventana1() {
+    InetAddress direccionServidor2;
+    int puertoServidor2;
+    JTextArea listaLibros;
+    JScrollPane sp;
+    ConectorBaseDatos cbd;
+    public Ventana1(){
         initComponents();
-        panel = new Ilustrador(850,700,"");
+    }
+    public Ventana1(int numServidor) {
+        initComponents();
+        panel = new Ilustrador(450,700,"");
         this.setLocationRelativeTo(null);
         r1 = new RelojGrafico(false,328,50);
         r2 = new RelojGrafico(false,38,205);
@@ -35,8 +53,46 @@ public class Ventana1 extends javax.swing.JFrame {
         r2.setVisible(false);
         r3.setVisible(false);
         r4.setVisible(false);
+        /*if(numServidor == 2){
+            conectarServidor1();
+            System.out.println("Servidor de reespaldo iniciado");
+        }*/
         iniciarServidor();
+        contentPane.setBorder(new EmptyBorder(5,5,5,5));
+        contentPane.setLayout(new BorderLayout(0,0));
+        listaLibros = new JTextArea(10,0);
+        contentPane.add(listaLibros);
+        contentPane.add(listaLibros, BorderLayout.CENTER);
+        sp = new JScrollPane(listaLibros,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        contentPane.add(sp);
+        //Escribir los libros de la bd en listaLibros
+        cbd = new ConectorBaseDatos();
+        ArrayList<String> libros = cbd.getLibros();
+        listaLibros.setText("");
+        for(int i=0;i<libros.size();i++){
+            listaLibros.append(libros.get(i)+"\n");
+            System.out.println(libros.get(i));
+        }
     }
+    /*public void conectarServidor1(){
+        byte[] buffer = new byte[1024];
+        int PUERTO = 5001;
+        String servidor="localhost";
+        InetAddress direccionServidor;
+        DatagramSocket socketUDP;
+	try{
+            direccionServidor = InetAddress.getByName(servidor);
+            socketUDP = new DatagramSocket();
+            String mensaje = "Servidor2";
+            buffer = mensaje.getBytes();
+            DatagramPacket pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor,PUERTO);
+            System.out.println("Inicio del servidor");
+            socketUDP.send(pregunta);
+            while(socketUDP.isConnected()){}
+            System.out.println("Aquí");
+            socketUDP.close();
+        }catch(IOException e){}
+    }*/
     public void enviar(int reloj){
         try{
             Integer[] hora;
@@ -81,7 +137,7 @@ public class Ventana1 extends javax.swing.JFrame {
 		try{
                     System.out.println("Iniciando el servidor UDP");
                     socketUDP = new DatagramSocket(PUERTO);
-                    ConectorBaseDatos cbd = new ConectorBaseDatos();
+                    cbd.reiniciarBD();
                     while(true){
                         buffer = new byte[1024];
 			DatagramPacket peticion = new DatagramPacket(buffer,buffer.length);
@@ -101,7 +157,7 @@ public class Ventana1 extends javax.swing.JFrame {
                                 direccion[numeroReloj] = peticion.getAddress();
                             }
                             //System.out.println(numeroReloj); //Prestando el libro al cliente ...
-                            String[] resp = cbd.pedirLibro(direccion,puertoCliente,hora);
+                            String[] resp = cbd.pedirLibro(numeroReloj,direccion,hora);
                             System.out.println(resp[0]);
                             System.out.println(resp[1]);
                             panel.dibujar(resp[1]);
@@ -110,6 +166,40 @@ public class Ventana1 extends javax.swing.JFrame {
                             DatagramPacket respuesta = new DatagramPacket(buffer,buffer.length,direccion[numeroReloj],puertoCliente[numeroReloj]);
                             System.out.println("Envio la informacion del cliente");
                             socketUDP.send(respuesta);
+                            ////
+                            //Escribir los libros de la bd en listaLibros
+                            ////
+                            ArrayList<String> libros = cbd.getLibros();
+                            listaLibros.setText("");
+                            for(int i=0;i<libros.size();i++){
+                                listaLibros.append(libros.get(i)+"\n");
+                            }
+                            if(cbd.esLibrosVacio()){
+                                //Informar a todos los clientes que el prestamo de libros ha terminado
+                                informarVacio();
+                            }
+                        }else if(mensaje.startsWith("reiniciar")){
+                            numeroReloj = Integer.valueOf(mensaje.substring(9,10));
+                            String hora = mensaje.substring(10);
+                            if(numeroReloj>2){
+                                puertoCliente[3] = peticion.getPort();
+                                direccion[3] = peticion.getAddress();
+                            }else{
+                                puertoCliente[numeroReloj] = peticion.getPort();
+                                direccion[numeroReloj] = peticion.getAddress();
+                            }
+                            //Regresar los datos de un usuario a la tabla de los libros a prestar
+                            cbd.reiniciarUsuario(direccion,puertoCliente,hora);
+                            System.out.println("Reiniciar de usuario "+String.valueOf(numeroReloj));
+                            ////
+                            //Escribir los libros de la bd en listaLibros
+                            ////
+                            ArrayList<String> libros = cbd.getLibros();
+                            listaLibros.setText("");
+                            for(int i=0;i<libros.size();i++){
+                                listaLibros.append(libros.get(i)+"\n");
+                            }
+                            //Agregar a la Base de Datos los libros prestados a este usuario
                         }else{
                             if(!mensaje.startsWith("Iniciar")){
                                 numeroReloj = Integer.valueOf(mensaje.substring(0,1));
@@ -145,6 +235,45 @@ public class Ventana1 extends javax.swing.JFrame {
             }
         };
         sv.start();
+        /*Thread sv2 = new Thread(){
+            public void run(){
+                final int PUERTO = 5001;
+		byte[] buffer = new byte[1024];
+		try{
+                    System.out.println("Iniciando el servidor UDP para los servidores");
+                    socketUDPServidor2 = new DatagramSocket(PUERTO);
+                    buffer = new byte[1024];
+                    DatagramPacket peticion = new DatagramPacket(buffer,buffer.length);
+                    socketUDPServidor2.receive(peticion);
+                    System.out.println("Recibo la informacion del cliente");
+                    String mensaje = new String(peticion.getData());
+                    //El cliente solo puede pedir la hora de su reloj
+                    System.out.println("Recibido: "+mensaje);
+                    while(true){}
+                }catch(IOException e){}
+            }
+        };
+        sv2.start();*/
+    }
+    public void informarVacio(){
+        try{
+            byte[] buffer = new byte[1024];
+            buffer = "vacio".getBytes();
+            DatagramPacket respuesta = new DatagramPacket(buffer,buffer.length,direccion[0],puertoCliente[0]);
+            socketUDP.send(respuesta);
+        }catch(IOException e){}
+        try{
+            byte[] buffer = new byte[1024];
+            buffer = "vacio".getBytes();
+            DatagramPacket respuesta = new DatagramPacket(buffer,buffer.length,direccion[1],puertoCliente[1]);
+            socketUDP.send(respuesta);
+        }catch(IOException e){}
+        try{
+            byte[] buffer = new byte[1024];
+            buffer = "vacio".getBytes();
+            DatagramPacket respuesta = new DatagramPacket(buffer,buffer.length,direccion[2],puertoCliente[2]);
+            socketUDP.send(respuesta);
+        }catch(IOException e){}
     }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -152,6 +281,7 @@ public class Ventana1 extends javax.swing.JFrame {
 
         jMenu1 = new javax.swing.JMenu();
         jPanel1 = new javax.swing.JPanel();
+        contentPane = new javax.swing.JPanel();
         salir = new javax.swing.JButton();
         reiniciar = new javax.swing.JButton();
 
@@ -162,15 +292,34 @@ public class Ventana1 extends javax.swing.JFrame {
 
         jPanel1.setBackground(new java.awt.Color(38, 70, 95));
 
+        contentPane.setPreferredSize(new java.awt.Dimension(300, 700));
+
+        javax.swing.GroupLayout contentPaneLayout = new javax.swing.GroupLayout(contentPane);
+        contentPane.setLayout(contentPaneLayout);
+        contentPaneLayout.setHorizontalGroup(
+            contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+        contentPaneLayout.setVerticalGroup(
+            contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 700, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(contentPane, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 380, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(180, 180, 180)
+                .addComponent(contentPane, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(118, Short.MAX_VALUE))
         );
 
         salir.setText("Salir");
@@ -196,7 +345,7 @@ public class Ventana1 extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 738, Short.MAX_VALUE)
+                        .addGap(0, 1115, Short.MAX_VALUE)
                         .addComponent(reiniciar)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(salir)))
@@ -223,6 +372,41 @@ public class Ventana1 extends javax.swing.JFrame {
 
     private void reiniciarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reiniciarActionPerformed
         //Solicitar a los clientes la eliminación de sus Datos
+        try{
+            String resp = "Reiniciar";
+            System.out.println(resp);
+            byte[] buffer = new byte[1024];
+            buffer = resp.getBytes();
+            DatagramPacket respuesta = new DatagramPacket(buffer,buffer.length,direccion[0],puertoCliente[0]);
+            socketUDP.send(respuesta);
+            System.out.println("Envio el reinicio al cliente 1");
+        }catch(IOException e){}
+        try{
+            String resp = "Reiniciar";
+            System.out.println(resp);
+            byte[] buffer = new byte[1024];
+            buffer = resp.getBytes();
+            DatagramPacket respuesta = new DatagramPacket(buffer,buffer.length,direccion[1],puertoCliente[1]);
+            socketUDP.send(respuesta);
+            System.out.println("Envio el reinicio al cliente 2");
+        }catch(IOException e){}
+        try{
+            String resp = "Reiniciar";
+            System.out.println(resp);
+            byte[] buffer = new byte[1024];
+            buffer = resp.getBytes();
+            DatagramPacket respuesta = new DatagramPacket(buffer,buffer.length,direccion[2],puertoCliente[2]);
+            socketUDP.send(respuesta);
+            System.out.println("Envio el reinicio al cliente 3");
+        }catch(IOException e){}
+        ////
+        //Escribir los libros de la bd en listaLibros
+        ////
+        ArrayList<String> libros = cbd.getLibros();
+        listaLibros.setText("");
+        for(int i=0;i<libros.size();i++){
+            listaLibros.append(libros.get(i)+"\n");
+        }
         //Reiniciar BD
     }//GEN-LAST:event_reiniciarActionPerformed
     public static void main(String args[]) {
@@ -257,6 +441,7 @@ public class Ventana1 extends javax.swing.JFrame {
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel contentPane;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JButton reiniciar;

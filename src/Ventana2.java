@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
@@ -98,6 +99,22 @@ public class Ventana2 extends javax.swing.JFrame {
                             infoLibros.append(respuesta2[1]+"\n");
                             infoLibros.append(respuesta2[2]+"\n");
                             infoLibros.append(respuesta2[3]+"\n\n");
+                        }else if(mensaje.startsWith("Reiniciar")){
+                            infoLibros.setText("");
+                        }else if(mensaje.startsWith("vacio")){
+                            int resp = JOptionPane.showConfirmDialog(null, "El sistema ha prestado todos los libros, ¿deseas seguir en el sistema?");
+                            if(resp==1){
+                                try{
+                                    mensaje = "reiniciar"+String.valueOf(numReloj)+r1.getHora2();
+                                    buffer = new byte[1024];
+                                    buffer = mensaje.getBytes();
+                                    pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor,PUERTO);
+                                    System.out.println("Regresando libros");
+                                    socketUDP.send(pregunta);
+                                    infoLibros.setText("");
+                                }catch(IOException e){}
+                                System.exit(0);
+                            }
                         }else{
                             respuesta = new Integer[4];
                             aux=0;
@@ -111,43 +128,6 @@ public class Ventana2 extends javax.swing.JFrame {
                                 }
                             }
                             r1.reasignarHora(respuesta[1], respuesta[2], respuesta[3]);
-                            //
-                            /*long TInicio, TFin, tiempo; //Variables para determinar el tiempo de ejecución
-                            TInicio = System.currentTimeMillis();*/
-                            //Iniciamos a contar, esto es T0
-                            /*mensaje = String.valueOf(respuesta[3]);
-                            System.out.println(mensaje);
-                            buffer = new byte[1024];
-                            buffer = mensaje.getBytes();
-                            pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor,PUERTO);
-                            System.out.println("Envio el datagrama");
-                            //Inicia el proceso de sincronización
-                            socketUDP.send(pregunta);
-                            buffer = new byte[1024];
-                            peticion = new DatagramPacket(buffer,buffer.length);
-                            socketUDP.receive(peticion);
-                            System.out.println("Recibo la peticion");
-                            mensaje = new String(peticion.getData());
-                            System.out.println(mensaje);
-                            respuesta = new Integer[4];
-                            aux=0;
-                            k=0;
-                            for(i=0;i<mensaje.length();i++){
-                                if(mensaje.charAt(i)==','){
-                                    respuesta[k] = Integer.valueOf(mensaje.substring(aux,i));
-                                    aux=i+1;
-                                    System.out.println(respuesta[k]);
-                                    k+=1;
-                                }
-                            }
-                            /*TFin = System.currentTimeMillis(); //Tomamos la hora en que finalizó el algoritmo y la almacenamos en la variable T
-                            tiempo = TFin - TInicio; //Calculamos los milisegundos de diferencia
-                            System.out.println("Tiempo de ejecución en milisegundos: " + tiempo);
-                            int C=0;
-                            if(tiempo){
-
-                            }*/
-                            //r1.reasignarHora(respuesta[0], respuesta[1], respuesta[2]);
                         }
                     }
                     //socketUDP.close();
@@ -165,6 +145,7 @@ public class Ventana2 extends javax.swing.JFrame {
         contentPane = new javax.swing.JPanel();
         salir = new javax.swing.JButton();
         pedirLibro = new javax.swing.JButton();
+        reiniciar = new javax.swing.JButton();
 
         jMenu1.setText("jMenu1");
 
@@ -214,6 +195,13 @@ public class Ventana2 extends javax.swing.JFrame {
             }
         });
 
+        reiniciar.setText("Reiniciar");
+        reiniciar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                reiniciarActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -223,7 +211,9 @@ public class Ventana2 extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 290, Short.MAX_VALUE)
+                        .addGap(0, 200, Short.MAX_VALUE)
+                        .addComponent(reiniciar)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(pedirLibro)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(salir)))
@@ -237,7 +227,8 @@ public class Ventana2 extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(salir)
-                    .addComponent(pedirLibro))
+                    .addComponent(pedirLibro)
+                    .addComponent(reiniciar))
                 .addContainerGap())
         );
 
@@ -245,6 +236,15 @@ public class Ventana2 extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void salirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_salirActionPerformed
+        try{
+            String mensaje = "reiniciar"+String.valueOf(numReloj)+r1.getHora2();
+            buffer = new byte[1024];
+            buffer = mensaje.getBytes();
+            DatagramPacket pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor,PUERTO);
+            System.out.println("Regresando libros");
+            socketUDP.send(pregunta);
+            infoLibros.setText("");
+        }catch(IOException e){}
         System.exit(0);
     }//GEN-LAST:event_salirActionPerformed
 
@@ -258,6 +258,18 @@ public class Ventana2 extends javax.swing.JFrame {
             socketUDP.send(pregunta);
         }catch(IOException e){}
     }//GEN-LAST:event_pedirLibroActionPerformed
+
+    private void reiniciarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reiniciarActionPerformed
+        try{
+            String mensaje = "reiniciar"+String.valueOf(numReloj)+r1.getHora2();
+            buffer = new byte[1024];
+            buffer = mensaje.getBytes();
+            DatagramPacket pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor,PUERTO);
+            System.out.println("Regresando libros");
+            socketUDP.send(pregunta);
+            infoLibros.setText("");
+        }catch(IOException e){}
+    }//GEN-LAST:event_reiniciarActionPerformed
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -295,6 +307,7 @@ public class Ventana2 extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JButton pedirLibro;
+    private javax.swing.JButton reiniciar;
     private javax.swing.JButton salir;
     // End of variables declaration//GEN-END:variables
 }
