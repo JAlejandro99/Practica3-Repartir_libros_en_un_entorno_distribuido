@@ -77,14 +77,14 @@ public class ConectorBaseDatos {
             executeUpdate("DELETE from usuario; ");
             executeUpdate("alter table usuario AUTO_INCREMENT = 1");
             executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor1\", \"Delfin\", \"el muerto\", \"100.75\",\"imagen1.jpg\")");
-            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor2\", \"Picasso\", \"Mil años de soledad\", \"134.34\",\"imagen2.jpg\")");
-            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor3\", \"Solman\", \"Si hay sol hay playa\", \"53.36\",\"imagen3.jpg\");");
-            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor4\", \"Playa\", \"Conejo Malo\", \"234.25\",\"imagen4.jpg\");\n");
-            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor5\", \"Ariel\", \"El Travieso Scott\", \"354.65\",\"imagen5.jpg\");");
-            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor6\", \"Tecnos\", \"La Biblia\", \"500.03\",\"imagen6.jpg\");\n");
+            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor2\", \"Picasso\", \"Cien años de soledad\", \"134.34\",\"imagen2.jpg\")");
+            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor3\", \"Solman\", \"Hush hush\", \"53.36\",\"imagen3.jpg\");");
+            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor4\", \"Playa\", \"Malvado Conejito\", \"234.25\",\"imagen4.jpg\");\n");
+            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor5\", \"Ariel\", \"El Principito\", \"354.65\",\"imagen5.jpg\");");
+            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor6\", \"Tecnos\", \"Bajo el espino\", \"500.03\",\"imagen6.jpg\");\n");
             executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor7\", \"Alianza\", \"Harry Potter\", \"68.68\",\"imagen7.jpg\");");
             executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor8\", \"Akal\", \"Crespusculo\", \"143.96\",\"imagen8.jpg\");");
-            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor9\", \"Sintesis\", \"Heidi\", \"111.22\",\"imagen9.jpg\");");
+            executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor9\", \"Sintesis\", \"Cincuenta sombras de Grey\", \"111.22\",\"imagen9.jpg\");");
             executeUpdate("INSERT INTO libro (autor,editorial,nombre,precio,portada) VALUES(\"autor10\", \"Aranzadi\", \"Quijote\", \"123.12\",\"imagen10.jpg\");");
             con.close();   
         } catch (SQLException ex) {
