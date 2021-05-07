@@ -14,7 +14,7 @@ public class Ilustrador extends JPanel{
     String NOMBRE_IMAGE;
     public Ilustrador(int ancho, int alto, String img){
         super();
-        this.setBounds(20,180,ancho,alto);
+        this.setBounds(420,180,ancho,alto);
         this.ancho = ancho;
         this.alto = alto;
         this.NOMBRE_IMAGE = img;
