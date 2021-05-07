@@ -12,11 +12,14 @@ public class ConectorBaseDatos {
         ret[1] = "huskies.jpg";
         return ret;
     }
+    void reiniciarUsuario(InetAddress[] direccion, int[] puertoCliente, String hora){
+        System.out.println(hora);
+    }
     public void reiniciarBD(){
     }
     public void pedirLibro2(String IP, String hora, String nombreLibro){
     }
     public boolean isEmpty(){
-        return false;
+        return true;
     }
 }
