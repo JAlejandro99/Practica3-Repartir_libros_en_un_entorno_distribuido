@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
@@ -15,6 +16,7 @@ public class Ventana1 extends javax.swing.JFrame {
     RelojGrafico r1,r2,r3,r4;
     Ilustrador panel;
     int numServidor;
+    //numeroReloj = #Cliente
     int numeroReloj;
     DatagramSocket socketUDP;
     DatagramSocket socketUDPServidor2;
@@ -24,6 +26,7 @@ public class Ventana1 extends javax.swing.JFrame {
     int puertoServidor2;
     JTextArea listaLibros;
     JScrollPane sp;
+    ConectorBaseDatos cbd;
     public Ventana1(){
         initComponents();
     }
@@ -63,6 +66,13 @@ public class Ventana1 extends javax.swing.JFrame {
         sp = new JScrollPane(listaLibros,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         contentPane.add(sp);
         //Escribir los libros de la bd en listaLibros
+        cbd = new ConectorBaseDatos();
+        ArrayList<String> libros = cbd.getLibros();
+        listaLibros.setText("");
+        for(int i=0;i<libros.size();i++){
+            listaLibros.append(libros.get(i)+"\n");
+            System.out.println(libros.get(i));
+        }
     }
     /*public void conectarServidor1(){
         byte[] buffer = new byte[1024];
@@ -127,7 +137,7 @@ public class Ventana1 extends javax.swing.JFrame {
 		try{
                     System.out.println("Iniciando el servidor UDP");
                     socketUDP = new DatagramSocket(PUERTO);
-                    ConectorBaseDatos cbd = new ConectorBaseDatos();
+                    cbd.reiniciarBD();
                     while(true){
                         buffer = new byte[1024];
 			DatagramPacket peticion = new DatagramPacket(buffer,buffer.length);
@@ -147,7 +157,7 @@ public class Ventana1 extends javax.swing.JFrame {
                                 direccion[numeroReloj] = peticion.getAddress();
                             }
                             //System.out.println(numeroReloj); //Prestando el libro al cliente ...
-                            String[] resp = cbd.pedirLibro(direccion,puertoCliente,hora);
+                            String[] resp = cbd.pedirLibro(numeroReloj,direccion,hora);
                             System.out.println(resp[0]);
                             System.out.println(resp[1]);
                             panel.dibujar(resp[1]);
@@ -159,7 +169,12 @@ public class Ventana1 extends javax.swing.JFrame {
                             ////
                             //Escribir los libros de la bd en listaLibros
                             ////
-                            if(cbd.isEmpty()){
+                            ArrayList<String> libros = cbd.getLibros();
+                            listaLibros.setText("");
+                            for(int i=0;i<libros.size();i++){
+                                listaLibros.append(libros.get(i)+"\n");
+                            }
+                            if(cbd.esLibrosVacio()){
                                 //Informar a todos los clientes que el prestamo de libros ha terminado
                                 informarVacio();
                             }
@@ -173,11 +188,17 @@ public class Ventana1 extends javax.swing.JFrame {
                                 puertoCliente[numeroReloj] = peticion.getPort();
                                 direccion[numeroReloj] = peticion.getAddress();
                             }
+                            //Regresar los datos de un usuario a la tabla de los libros a prestar
                             cbd.reiniciarUsuario(direccion,puertoCliente,hora);
                             System.out.println("Reiniciar de usuario "+String.valueOf(numeroReloj));
                             ////
                             //Escribir los libros de la bd en listaLibros
                             ////
+                            ArrayList<String> libros = cbd.getLibros();
+                            listaLibros.setText("");
+                            for(int i=0;i<libros.size();i++){
+                                listaLibros.append(libros.get(i)+"\n");
+                            }
                             //Agregar a la Base de Datos los libros prestados a este usuario
                         }else{
                             if(!mensaje.startsWith("Iniciar")){
@@ -381,6 +402,11 @@ public class Ventana1 extends javax.swing.JFrame {
         ////
         //Escribir los libros de la bd en listaLibros
         ////
+        ArrayList<String> libros = cbd.getLibros();
+        listaLibros.setText("");
+        for(int i=0;i<libros.size();i++){
+            listaLibros.append(libros.get(i)+"\n");
+        }
         //Reiniciar BD
     }//GEN-LAST:event_reiniciarActionPerformed
     public static void main(String args[]) {
