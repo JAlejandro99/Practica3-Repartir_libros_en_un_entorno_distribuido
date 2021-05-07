@@ -30,7 +30,7 @@ public class ConectorBaseDatos {
         }
         return conexion;
     }
-    String[] pedirLibro(InetAddress direccion, int puertoCliente, String hora){
+    String[] pedirLibro(InetAddress[] direccion, int[] puertoCliente, String hora){
         String[] ret = new String[2];
         ret[0] = "libro:Nombre,Autor,Editorial,Precio,";
         ret[1] = "huskies.jpg";
