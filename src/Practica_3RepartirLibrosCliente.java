@@ -9,7 +9,7 @@ public class Practica_3RepartirLibrosCliente {
     }
     public static void pedirServidoryPuerto(){
         ServidoryPuerto sp = new ServidoryPuerto();
-        sp.setTitle("Práctica 2 - Cliente, Servidor y Puerto");
+        sp.setTitle("Práctica 3 - Repartir Libros, Servidor y Puerto");
         sp.setVisible(true);
         sp.setResizable(false);
         sp.aceptar.addActionListener(new ActionListener(){
@@ -18,7 +18,7 @@ public class Practica_3RepartirLibrosCliente {
                 servidor = sp.IP.getText();
                 sp.setVisible(false);
                 Ventana2 v2 = new Ventana2(PUERTO,servidor);
-                v2.setTitle("Práctica 2 - Relojes con maestro, Cliente");
+                v2.setTitle("Práctica 3 - Repartir Libros, Cliente");
                 v2.setVisible(true);
                 v2.setResizable(false);
             }

@@ -87,9 +87,22 @@ public class Ventana1 extends javax.swing.JFrame {
             String mensaje = "Servidor2";
             buffer = mensaje.getBytes();
             DatagramPacket pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor,PUERTO);
-            System.out.println("Inicio del servidor");
+            System.out.println("Conexión con Servidor 2");
             socketUDP.send(pregunta);
-            while(socketUDP.isConnected()){}
+            Boolean seguir = true;
+            while(seguir){
+                buffer = new byte[1024];
+		DatagramPacket peticion = new DatagramPacket(buffer,buffer.length);
+                socketUDP.receive(peticion);
+                System.out.println("Recibo la informacion del Servidor 1");
+                mensaje = new String(peticion.getData());
+                //El cliente solo puede pedir la hora de su reloj
+                System.out.println("Recibido: "+mensaje);
+                if(mensaje.startsWith("Iniciar")){
+                    seguir = false;
+                }else if(mensaje.equals("AgregarCliente")){
+                }
+            }
             System.out.println("Aquí");
             socketUDP.close();
         }catch(IOException e){}
@@ -253,11 +266,12 @@ public class Ventana1 extends javax.swing.JFrame {
                     buffer = new byte[1024];
                     DatagramPacket peticion = new DatagramPacket(buffer,buffer.length);
                     socketUDPServidor2.receive(peticion);
-                    System.out.println("Recibo la informacion del cliente");
+                    System.out.println("Recibo la informacion del Servidor 2");
                     String mensaje = new String(peticion.getData());
-                    //El cliente solo puede pedir la hora de su reloj
                     System.out.println("Recibido: "+mensaje);
-                    while(true){}
+                    direccionServidor2 = peticion.getAddress();
+                    puertoServidor2 = peticion.getPort();
+                    //while(true){}
                 }catch(IOException e){}
             }
         };
@@ -375,6 +389,14 @@ public class Ventana1 extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void salirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_salirActionPerformed
+        /*try{
+            String mensaje = "Iniciar";
+            byte[] buffer = new byte[1024];
+            buffer = mensaje.getBytes();
+            DatagramPacket pregunta = new DatagramPacket(buffer,buffer.length,direccionServidor2,puertoServidor2);
+            System.out.println("Pidiendo la salida");
+            socketUDPServidor2.send(pregunta);
+        }catch(IOException e){}*/
         System.exit(0);
     }//GEN-LAST:event_salirActionPerformed
 
